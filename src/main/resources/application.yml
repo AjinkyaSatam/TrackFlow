@@ -10,9 +10,9 @@ spring:
   # Database Configuration
   # ---------------------------------------------------------------
   datasource:
-    url: jdbc:postgresql://localhost:5432/trackflow_db
-    username: trackflow
-    password: trackflow_secret
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/trackflow_db}
+    username: ${DB_USERNAME:trackflow}
+    password: ${DB_PASSWORD:trackflow_secret}
     driver-class-name: org.postgresql.Driver
 
     # HikariCP Connection Pool Settings
@@ -61,7 +61,7 @@ server:
 # ===================================================================
 app:
   jwt:
-    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970   # Change in production!
+    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
     access-token-expiration: 900000      # 15 minutes in milliseconds
     refresh-token-expiration: 604800000  # 7 days in milliseconds
     issuer: TrackFlow
