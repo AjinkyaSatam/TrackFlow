@@ -1,0 +1,35 @@
+# ===================================================================
+# TrackFlow Test Configuration
+# ===================================================================
+# Uses H2 in-memory database for fast, isolated testing
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:trackflow_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+app:
+  jwt:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970TestKey
+    access-token-expiration: 900000
+    refresh-token-expiration: 604800000
+    issuer: TrackFlow-Test
+  storage:
+    type: local
+    local:
+      upload-dir: ./test-uploads
+
+logging:
+  level:
+    root: WARN
+    com.trackflow: DEBUG
