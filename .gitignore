@@ -42,5 +42,6 @@ test-uploads/
 Thumbs.db
 
 ### Environment / Secrets ###
+.env
 *.env
 application-prod.yml
