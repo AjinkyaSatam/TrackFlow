@@ -59,11 +59,11 @@ src/main/java/com/trackflow/
 
 ## 📌 Development Roadmap
 
-- [x] **Step 1:** Project foundation, standard responses, global exception handlers, and database setups.
-- [x] **Step 2:** Database schema design and JPA relationships (13 entities, 7 enums).
-- [x] **Step 3:** Database access layer (Spring Data JPA repositories, JPQL optimizations).
-- [x] **Step 4:** JWT Authentication, refresh token engine, and Spring Security configurations.
-- [x] **Step 5:** User Profile management, credentials update, and member lookup directories.
+- [ ] **Step 1:** Project foundation, standard responses, global exception handlers, and database setups.
+- [ ] **Step 2:** Database schema design and JPA relationships (13 entities, 7 enums).
+- [ ] **Step 3:** Database access layer (Spring Data JPA repositories, JPQL optimizations).
+- [ ] **Step 4:** JWT Authentication, refresh token engine, and Spring Security configurations.
+- [ ] **Step 5:** User Profile management, credentials update, and member lookup directories.
 - [ ] **Step 6:** Organization Management Module.
 - [ ] **Step 7:** Project Management Module.
 - [ ] **Step 8:** Sprint Lifecycle & Planning Module.
