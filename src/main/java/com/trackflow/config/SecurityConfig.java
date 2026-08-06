@@ -1,79 +1,87 @@
 package com.trackflow.config;
 
+import com.trackflow.security.CustomUserDetailsService;
+import com.trackflow.security.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Temporary Security Configuration for Step 1.
+ * Enterprise Spring Security and JWT configuration.
  *
- * <p>This is a placeholder that permits all requests so we can test
- * the application without authentication during initial setup.
- * We will replace this with full JWT authentication in Step 2.</p>
- *
- * <h3>Why not just disable security?</h3>
- * <p>Even in early development, having Spring Security on the classpath
- * and configured (even permissively) means:</p>
- * <ul>
- *   <li>CORS, CSRF, and header protections are properly configured</li>
- *   <li>The PasswordEncoder bean is ready for user registration</li>
- *   <li>The security filter chain is in place for future JWT integration</li>
- * </ul>
- *
- * <h3>Interview Question:</h3>
- * <p>"Why use BCrypt for password hashing?"</p>
- * <p>Answer: BCrypt is an adaptive hashing function. It uses a cost factor (salt rounds)
- * that makes brute-force attacks computationally expensive. Unlike MD5/SHA,
- * BCrypt is designed for passwords — it's intentionally slow.</p>
+ * <p>Uses {@link EnableMethodSecurity} to enable role-based method security annotations
+ * like {@code @PreAuthorize("hasRole('PM')")} on service/controller layers.</p>
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final CustomUserDetailsService userDetailsService;
+
     /**
-     * Configures the HTTP security filter chain.
-     *
-     * <p>Current configuration:</p>
-     * <ul>
-     *   <li>CSRF disabled (we use JWT, not cookies — CSRF is irrelevant)</li>
-     *   <li>Stateless session (REST APIs should not maintain server-side sessions)</li>
-     *   <li>All endpoints are permitted (temporary — will be locked down in Step 2)</li>
-     * </ul>
+     * Core Security filter chain configuring URL access control, stateless sessions,
+     * and injecting the JWT auth filter.
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Disable CSRF — JWT-based auth doesn't need it
+                // Disable CSRF since REST APIs do not use browser session cookies
                 .csrf(csrf -> csrf.disable())
 
-                // Stateless session — no session cookies
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                // Configure endpoint authorizations
+                .authorizeHttpRequests(auth -> auth
+                        // Permit public paths (auth, swagger api docs, and health checks)
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/health").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        // Lock down all other endpoints
+                        .anyRequest().authenticated()
                 )
 
-                // Permit all requests for now (will be restricted in Step 2)
-                .authorizeHttpRequests(auth ->
-                        auth.anyRequest().permitAll()
-                );
+                // Enforce stateless sessions
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
+                // Inject our custom AuthenticationProvider
+                .authenticationProvider(authenticationProvider())
+
+                // Attach JWT verification filter before UsernamePasswordAuthenticationFilter
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     /**
-     * BCrypt password encoder bean.
-     *
-     * <p>BCrypt automatically handles:</p>
-     * <ul>
-     *   <li>Salt generation (each password gets a unique salt)</li>
-     *   <li>Configurable strength (default: 10 rounds)</li>
-     *   <li>One-way hashing (cannot reverse to plaintext)</li>
-     * </ul>
+     * Provider linking password hashing verification with custom database user lookups.
      */
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
