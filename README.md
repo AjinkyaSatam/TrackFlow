@@ -1,79 +1,50 @@
-# 🚀 TrackFlow — Intelligent Issue & Sprint Management Platform
+# TrackFlow — Intelligent Issue & Sprint Management Platform
 
-TrackFlow is a SaaS-focused enterprise backend application designed for software teams to plan sprints, track issues, assign developers, and monitor team workload. 
+TrackFlow is a high-performance, backend-focused SaaS project management platform designed for engineering teams to coordinate sprints, trace issues, balance workloads, and manage document sharing. 
 
-This project is built from scratch using clean code principles, SOLID design, and industry-standard backend patterns (not a Jira clone, but an original implementation). It showcases skills suitable for professional Software Developer and Backend Developer interviews.
+The project demonstrates clean code architecture, robust multi-tenant boundaries, secure stateless authorization protocols, and optimized database transactional boundaries.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Technology Stack
 
 * **Language:** Java 21
 * **Framework:** Spring Boot 3.4
-* **Security:** Spring Security (Stateless JWT Authentication, Token Rotation & Revocation)
+* **Security:** Spring Security (Stateless JWT, Token Rotation & Revocation)
 * **Database:** PostgreSQL
-* **ORM:** Spring Data JPA (Hibernate)
-* **Validation:** Jakarta Validation (JSR-380)
-* **Documentation:** Swagger/OpenAPI 3
-* **Testing:** JUnit 5, Mockito, H2 In-Memory Database (Test Profile)
+* **ORM:** Spring Data JPA / Hibernate
+* **API Documentation:** Swagger / OpenAPI 3
+* **Testing:** JUnit 5, Mockito, H2 Database
 * **Containerization:** Docker, Docker Compose
-* **Build Tool:** Maven
+* **Frontend Demo:** HTML5, Vanilla CSS, JavaScript (served via Spring Boot)
 
 ---
 
-## 🏗️ Architecture & Core Design Patterns
+## 🏗️ Architecture & Key Features
 
-TrackFlow uses a strict **Enterprise Layered Architecture** with clear boundaries:
+TrackFlow utilizes a strict **Enterprise Layered Architecture** with distinct boundaries separating controllers, services, database mappers, and repositories.
 
-```
-Controller  ──(DTOs)──>  Service  ──(Entities)──>  Repository  ──(SQL)──>  Database
-```
+### 🔒 Enterprise Security & Auth
+* **JWT Access & Refresh Tokens:** Implements stateless session authorization adapter with secure UUID refresh token generation.
+* **Token Rotation & Revocation:** Blacklists tokens on logouts to prevent replay attacks and enforces token rotation.
+* **Method-Level Authorizations:** Uses Spring Security annotations (`@PreAuthorize`) to lock down endpoints based on roles (`DEVELOPER`, `PROJECT_MANAGER`, `ORG_ADMIN`, `SUPER_ADMIN`).
 
-### Key Design Implementation:
-1. **The Envelope Pattern (`ApiResponse`):** Every API endpoint returns a standardized JSON structure with consistent metadata (status, message, payload, and audit timestamp).
-2. **Global Exception Handling (`@RestControllerAdvice`):** Centralizes error logging and response generation, completely eliminating cluttered `try-catch` blocks from controller files.
-3. **Database Decoupling (DTO & Mapper Pattern):** Domain entities never escape the service boundary. High-performance, compile-safe manual mappers translate data to DTOs for client consumption.
-4. **Soft Delete (`BaseEntity`):** Automatic auditable timestamps (`createdAt`, `updatedAt`) and soft-deletion flags prevent actual record destruction, retaining referential integrity.
-5. **Workflow State Machine:** Enforces valid transitions for issues (e.g., `OPEN` can only go to `IN_PROGRESS`) at the domain level.
-6. **Multi-Tenancy Access Control:** Restricts user data views and directory searches within their own organizational boundaries to prevent cross-tenant security leaks.
+### 🏛️ Multi-Tenant Bounds
+* **Tenant Isolation:** Enforces strict logical boundaries at the service layer. Users, projects, and directories can only query resources belonging to their organization.
+* **Access Control Checkers:** Validates ownership of comments, issues, and attachments before mutations.
 
----
+### 📂 Decoupled Attachment Storage
+* **Strategy Pattern:** Decouples the upload controller from storage backends through a `StorageService` interface.
+* **Path Validation:** Prevents directory traversal attacks by validating path resolutions relative to root upload paths.
 
-## 📂 Project Structure
+### 📊 Intelligent Analytics
+* **Developer Workload Balancer:** Sums active estimation loads for assignees and suggests who has the lowest allocation first.
+* **Sprint Health Scores:** Employs algorithmic computations rating sprint execution health (0-100) based on completion rate, penalized by active blocker bugs and overloaded developers.
+* **Duplicate Detection:** Queries local databases for title pattern overlaps before issues registration to warn of duplication.
 
-```
-src/main/java/com/trackflow/
-├── config/             # Security rules, Swagger docs configuration
-├── controller/         # REST Controllers (Auth, Users, Health checks)
-├── dto/                # Data Transfer Objects (Payload validation)
-├── entity/             # JPA Entities & Enums (Database schema)
-├── exception/          # Custom exceptions & Global Exception Handler
-├── mapper/             # Entity-DTO translator classes
-├── repository/         # Spring Data JPA repositories
-├── security/           # JWT, UserDetails adapter, Security filters
-├── service/            # Core business logic (Services & Implementations)
-└── util/               # Constants & general utility helpers
-```
-
----
-
-## 📌 Development Roadmap
-
-- [ ] **Step 1:** Project foundation, standard responses, global exception handlers, and database setups.
-- [ ] **Step 2:** Database schema design and JPA relationships (13 entities, 7 enums).
-- [ ] **Step 3:** Database access layer (Spring Data JPA repositories, JPQL optimizations).
-- [ ] **Step 4:** JWT Authentication, refresh token engine, and Spring Security configurations.
-- [ ] **Step 5:** User Profile management, credentials update, and member lookup directories.
-- [ ] **Step 6:** Organization Management Module.
-- [ ] **Step 7:** Project Management Module.
-- [ ] **Step 8:** Sprint Lifecycle & Planning Module.
-- [ ] **Step 9:** Issue Lifecycle Workflow & Assignment Module.
-- [ ] **Step 10:** Comment Threading & Mention Parser.
-- [ ] **Step 11:** File Storage Interface (Local Storage / MinIO / AWS S3).
-- [ ] **Step 12:** Audit Logs & Event-Driven Notification System.
-- [ ] **Step 13:** Original Algorithms (Duplicate Detection, Workload Balancer, Sprint Health Score).
-- [ ] **Step 14:** Unit & Integration Testing Suite.
-- [ ] **Step 15:** Production Docker builds & deployment setup.
+### 📝 Global Exceptions & Standard API Responses
+* **Envelope Pattern:** Wraps all API responses in a standard `ApiResponse<T>` record keeping metadata and timestamps consistent.
+* **Controller Advice:** Catches all exceptions globally and translates them to client-friendly errors.
 
 ---
 
@@ -82,29 +53,50 @@ src/main/java/com/trackflow/
 ### Prerequisites
 * Java 21 JDK or higher
 * Docker & Docker Compose
-* Maven 3.9+ (or use the included wrapper `./mvnw`)
+* Maven 3.9+ (or use the included wrapper `./mvnw.cmd`)
 
-### 1. Boot up the Database
-Start the local PostgreSQL container using Docker Compose:
+### 1. Build and Package
+To build the project and package it into a single executable JAR file:
 ```bash
-docker-compose up -d
+./mvnw clean package -DskipTests
 ```
+This generates the packaged production archive inside the `target/` directory.
 
-### 2. Run the Application
-Start the Spring Boot backend server:
+### 2. Local Development (In-Memory Database)
+To run the server locally on H2 for testing without setting up databases:
 ```bash
-./mvnw spring-boot:run
-```
-The server will boot on `http://localhost:8080/api`.
+# On Windows PowerShell:
+$env:SPRING_PROFILES_ACTIVE="test"; .\mvnw.cmd spring-boot:run
 
-### 3. Check App Health
-Verify the health check endpoint:
-```
-GET http://localhost:8080/api/health
+# On Linux/macOS:
+SPRING_PROFILES_ACTIVE=test ./mvnw spring-boot:run
 ```
 
-### 4. Interactive API Documentation
-Open Swagger UI to test and document all API endpoints:
+Once running, open your browser and navigate to:
+* **Interactive SPA Web Dashboard:** `http://localhost:8080/api/index.html`
+* **Swagger API Explorer:** `http://localhost:8080/api/swagger-ui.html`
+
+### 3. Production Deployment (Docker Compose)
+To boot up the complete environment (Spring Boot + PostgreSQL container instance):
+```bash
+docker-compose up --build -d
 ```
-http://localhost:8080/api/swagger-ui.html
+The compose manifest includes a healthy database verification check before the application container initiates.
+
+---
+
+## 📂 Project Structure
+
+```
+src/main/java/com/trackflow/
+├── config/             # Security configurations, swagger beans
+├── controller/         # API REST controllers
+├── dto/                # Data Transfer Objects & validation templates
+├── entity/             # JPA entities & enums
+├── exception/          # Custom exceptions & REST controller advice
+├── mapper/             # Entity-DTO mapping translators
+├── repository/         # JPA data repositories
+├── security/           # JWT processing, filters, custom user details
+├── service/            # Business boundary logic services
+└── util/               # Constants & helpers
 ```
