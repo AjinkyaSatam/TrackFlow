@@ -1,32 +1,58 @@
-# ===================================================================
-# TrackFlow Docker Compose Configuration
-# ===================================================================
-# Run: docker-compose up -d
-
 version: '3.8'
 
 services:
   # -----------------------------------------------------------------
-  # PostgreSQL Database
+  # 1. PostgreSQL Database Service
   # -----------------------------------------------------------------
-  postgres:
+  postgres-db:
     image: postgres:16-alpine
     container_name: trackflow-postgres
-    restart: unless-stopped
+    restart: always
     environment:
       POSTGRES_DB: trackflow_db
       POSTGRES_USER: trackflow
-      POSTGRES_PASSWORD: trackflow_secret
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-trackflow_secret}
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - trackflow-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U trackflow -d trackflow_db"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # -----------------------------------------------------------------
+  # 2. Spring Boot Web Application Service
+  # -----------------------------------------------------------------
+  trackflow-app:
+    build: .
+    container_name: trackflow-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      # Inject DB credentials pointing to internal docker network name
+      DB_URL: jdbc:postgresql://postgres-db:5432/trackflow_db
+      DB_USERNAME: trackflow
+      DB_PASSWORD: ${DB_PASSWORD:-trackflow_secret}
+      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      SPRING_PROFILES_ACTIVE: prod
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - trackflow-net
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+
 volumes:
-  postgres_data:
+  pgdata:
     driver: local
+
+networks:
+  trackflow-net:
+    driver: bridge

@@ -45,10 +45,11 @@ public class SecurityConfig {
 
                 // Configure endpoint authorizations
                 .authorizeHttpRequests(auth -> auth
-                        // Permit public paths (auth, swagger api docs, and health checks)
+                        // Permit public paths (auth, swagger api docs, health checks, and static frontend resources)
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/health").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/", "/index.html", "/style.css", "/app.js").permitAll()
                         // Lock down all other endpoints
                         .anyRequest().authenticated()
                 )
