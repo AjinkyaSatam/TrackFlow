@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrackFlow — Intelligent Sprint Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ==========================================
+         1. Authentication Overlay Container
+         ========================================== -->
+    <div id="auth-container" class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo">
+                    <span class="logo-icon">⚡</span>
+                    <span class="logo-text">TrackFlow</span>
+                </div>
+                <p id="auth-subtitle">Intelligent Sprint Management Platform</p>
+            </div>
+
+            <!-- Login View -->
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="login-email">Email Address</label>
+                    <input type="email" id="login-email" required placeholder="name@company.com">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+                <p class="auth-toggle">Don't have an account? <a href="#" id="go-to-register">Create one</a></p>
+            </form>
+
+            <!-- Register View -->
+            <form id="register-form" class="auth-form hidden">
+                <div class="form-group">
+                    <label for="reg-name">Full Name</label>
+                    <input type="text" id="reg-name" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label for="reg-email">Email Address</label>
+                    <input type="email" id="reg-email" placeholder="name@company.com">
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Password (Min 8 chars)</label>
+                    <input type="password" id="reg-password" placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                    <label for="reg-role">Role</label>
+                    <select id="reg-role">
+                        <option value="DEVELOPER">Developer</option>
+                        <option value="PROJECT_MANAGER">Project Manager</option>
+                        <option value="ORG_ADMIN">Organization Admin</option>
+                        <option value="TESTER">Tester</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reg-org">Create Workspace / Organization (Optional)</label>
+                    <input type="text" id="reg-org" placeholder="e.g. Acme Corp">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Register Account</button>
+                <p class="auth-toggle">Already have an account? <a href="#" id="go-to-login">Sign in</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         2. Main Application Wrapper
+         ========================================== -->
+    <div id="app-container" class="app-wrapper hidden">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">TrackFlow</span>
+            </div>
+
+            <div class="workspace-info">
+                <div class="workspace-logo" id="ws-logo-letter">I</div>
+                <div class="workspace-details">
+                    <h4 id="ws-name">Workspace</h4>
+                    <p id="user-role-badge">Developer</p>
+                </div>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active" data-view="dashboard">
+                    <span class="menu-icon">📊</span> Dashboard
+                </a>
+                <a href="#" class="menu-item" data-view="kanban">
+                    <span class="menu-icon">📋</span> Kanban Board
+                </a>
+                <a href="#" class="menu-item" data-view="backlog">
+                    <span class="menu-icon">🗂️</span> Backlog
+                </a>
+                <a href="#" class="menu-item" data-view="sprints">
+                    <span class="menu-icon">🔄</span> Sprints
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar" id="user-avatar-letters">JD</div>
+                    <div class="user-details">
+                        <h4 id="user-name">User Profile</h4>
+                        <p id="user-email">email@domain.com</p>
+                    </div>
+                </div>
+                <button id="logout-btn" class="btn-logout" title="Sign Out">Sign Out 🚪</button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Panel -->
+        <main class="main-content">
+            
+            <!-- Top Header Bar -->
+            <header class="content-header">
+                <div class="header-left">
+                    <label for="project-selector" class="sr-only">Select Project</label>
+                    <select id="project-selector" class="project-dropdown">
+                        <option value="">Loading Projects...</option>
+                    </select>
+                    <button class="btn btn-secondary btn-sm" id="btn-new-project">+ Project</button>
+                </div>
+                <div class="header-right">
+                    <div id="active-sprint-badge" class="badge-sprint">No Active Sprint</div>
+                </div>
+            </header>
+
+            <!-- Dashboard View -->
+            <section id="view-dashboard" class="content-view">
+                <div class="view-header">
+                    <h2>Workspace Dashboard</h2>
+                    <p>Overview of project status, tasks, and sprint progress.</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-indigo">📋</div>
+                        <div class="stat-details">
+                            <span class="stat-label">Total Issues</span>
+                            <h3 id="stat-total-issues">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-orange">🔄</div>
+                        <div class="stat-details">
+                            <span class="stat-label">In Progress</span>
+                            <h3 id="stat-progress-issues">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-green">✅</div>
+                        <div class="stat-details">
+                            <span class="stat-label">Completed Tasks</span>
+                            <h3 id="stat-done-issues">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- Project Detail Info -->
+                    <div class="card">
+                        <h3>Project Details</h3>
+                        <div class="project-info-box">
+                            <p><strong>Name:</strong> <span id="info-proj-name">—</span></p>
+                            <p><strong>Key Prefix:</strong> <span id="info-proj-key">—</span></p>
+                            <p><strong>Deadline:</strong> <span id="info-proj-deadline">—</span></p>
+                            <p><strong>Repo Link:</strong> <a href="#" id="info-proj-repo" target="_blank">—</a></p>
+                            <p><strong>Description:</strong></p>
+                            <div class="desc-box" id="info-proj-desc">—</div>
+                        </div>
+                    </div>
+
+                    <!-- Active Sprint Status Summary -->
+                    <div class="card">
+                        <h3>Sprint Goal Summary</h3>
+                        <div class="sprint-goal-box">
+                            <h4 id="info-sprint-name">No Active Sprint</h4>
+                            <p class="goal-text" id="info-sprint-goal">Add and schedule a sprint to begin tracking progress timelines.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Kanban View -->
+            <section id="view-kanban" class="content-view hidden">
+                <div class="view-header flex-header">
+                    <div>
+                        <h2>Kanban Board</h2>
+                        <p>Track team progress across statuses.</p>
+                    </div>
+                    <button class="btn btn-primary" id="btn-create-issue">+ Create Issue</button>
+                </div>
+
+                <div class="kanban-board">
+                    <!-- OPEN Column -->
+                    <div class="kanban-column" data-status="OPEN">
+                        <div class="column-header">
+                            <span class="column-title">Backlog</span>
+                            <span class="issue-count" id="count-open">0</span>
+                        </div>
+                        <div class="kanban-cards" id="column-open"></div>
+                    </div>
+
+                    <!-- IN_PROGRESS Column -->
+                    <div class="kanban-column" data-status="IN_PROGRESS">
+                        <div class="column-header">
+                            <span class="column-title">In Progress</span>
+                            <span class="issue-count" id="count-inprogress">0</span>
+                        </div>
+                        <div class="kanban-cards" id="column-inprogress"></div>
+                    </div>
+
+                    <!-- CODE_REVIEW Column -->
+                    <div class="kanban-column" data-status="CODE_REVIEW">
+                        <div class="column-header">
+                            <span class="column-title">Review</span>
+                            <span class="issue-count" id="count-review">0</span>
+                        </div>
+                        <div class="kanban-cards" id="column-review"></div>
+                    </div>
+
+                    <!-- TESTING Column -->
+                    <div class="kanban-column" data-status="TESTING">
+                        <div class="column-header">
+                            <span class="column-title">Testing</span>
+                            <span class="issue-count" id="count-testing">0</span>
+                        </div>
+                        <div class="kanban-cards" id="column-testing"></div>
+                    </div>
+
+                    <!-- DONE Column -->
+                    <div class="kanban-column" data-status="DONE">
+                        <div class="column-header">
+                            <span class="column-title">Done</span>
+                            <span class="issue-count" id="count-done">0</span>
+                        </div>
+                        <div class="kanban-cards" id="column-done"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Backlog View -->
+            <section id="view-backlog" class="content-view hidden">
+                <div class="view-header">
+                    <h2>Project Backlog</h2>
+                    <p>List of all unassigned backlog issues.</p>
+                </div>
+                <div class="card">
+                    <div class="backlog-list" id="backlog-items">
+                        <p class="empty-state">No issues in the backlog.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sprints View -->
+            <section id="view-sprints" class="content-view hidden">
+                <div class="view-header flex-header">
+                    <div>
+                        <h2>Sprint Timelines</h2>
+                        <p>Plan and run project iterations.</p>
+                    </div>
+                    <button class="btn btn-primary" id="btn-new-sprint">+ Plan Sprint</button>
+                </div>
+                <div class="sprint-list-container" id="sprint-list-items">
+                    <p class="empty-state">No sprints scheduled.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ==========================================
+         3. Overlay Modals Containers
+         ========================================== -->
+    <!-- Project Modal -->
+    <div id="modal-project" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3>Create Project Workspace</h3>
+            <form id="form-create-project">
+                <div class="form-group">
+                    <label for="proj-name">Project Name</label>
+                    <input type="text" id="proj-name" required placeholder="e.g. Mobile App Dev">
+                </div>
+                <div class="form-group">
+                    <label for="proj-key">Project Key Prefix (Uppercase letters only)</label>
+                    <input type="text" id="proj-key" required placeholder="e.g. APP">
+                </div>
+                <div class="form-group">
+                    <label for="proj-deadline">Project Deadline</label>
+                    <input type="date" id="proj-deadline" required>
+                </div>
+                <div class="form-group">
+                    <label for="proj-repo">Repository URL</label>
+                    <input type="url" id="proj-repo" placeholder="https://github.com/...">
+                </div>
+                <div class="form-group">
+                    <label for="proj-desc">Description</label>
+                    <textarea id="proj-desc" placeholder="Brief outline of the project scope..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sprint Modal -->
+    <div id="modal-sprint" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3>Schedule Sprint Iteration</h3>
+            <form id="form-create-sprint">
+                <div class="form-group">
+                    <label for="sprint-name">Sprint Name</label>
+                    <input type="text" id="sprint-name" required placeholder="Sprint 1: Core Setup">
+                </div>
+                <div class="form-group">
+                    <label for="sprint-goal">Sprint Goal</label>
+                    <input type="text" id="sprint-goal" required placeholder="What needs to be accomplished?">
+                </div>
+                <div class="form-group">
+                    <label for="sprint-start">Start Date</label>
+                    <input type="date" id="sprint-start" required>
+                </div>
+                <div class="form-group">
+                    <label for="sprint-end">End Date</label>
+                    <input type="date" id="sprint-end" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Plan Sprint</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Issue Modal -->
+    <div id="modal-issue" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3>Create Backlog Work Issue</h3>
+            <form id="form-create-issue">
+                <div class="form-group">
+                    <label for="issue-title">Issue Title</label>
+                    <input type="text" id="issue-title" required placeholder="What needs to be done?">
+                </div>
+                <div class="form-group">
+                    <label for="issue-desc">Description</label>
+                    <textarea id="issue-desc" placeholder="Detailed requirements and notes..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="issue-type">Type</label>
+                        <select id="issue-type">
+                            <option value="FEATURE">Feature</option>
+                            <option value="BUG">Bug</option>
+                            <option value="TASK">Task</option>
+                            <option value="STORY">Story</option>
+                            <option value="IMPROVEMENT">Improvement</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="issue-priority">Priority</label>
+                        <select id="issue-priority">
+                            <option value="MEDIUM">Medium</option>
+                            <option value="LOW">Low</option>
+                            <option value="HIGH">High</option>
+                            <option value="CRITICAL">Critical</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="issue-hours">Estimate (Hours)</label>
+                        <input type="number" id="issue-hours" step="0.5" placeholder="e.g. 8">
+                    </div>
+                    <div class="form-group">
+                        <label for="issue-duedate">Due Date</label>
+                        <input type="date" id="issue-duedate">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Issue</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Issue Details Slide-out Panel -->
+    <div id="panel-issue" class="panel-overlay hidden">
+        <div class="panel-card">
+            <div class="panel-header">
+                <span id="panel-issue-key" class="issue-key-badge">TF-1</span>
+                <button class="close-panel">Close ✕</button>
+            </div>
+            
+            <div class="panel-body">
+                <h3 id="panel-issue-title">Configure Spring Security</h3>
+                <div class="panel-meta-grid">
+                    <div><strong>Type:</strong> <span id="panel-issue-type">Feature</span></div>
+                    <div><strong>Priority:</strong> <span id="panel-issue-priority">Medium</span></div>
+                    <div><strong>Status:</strong> <span id="panel-issue-status">Open</span></div>
+                    <div><strong>Estimate:</strong> <span id="panel-issue-hours">4h</span></div>
+                </div>
+                <p><strong>Description:</strong></p>
+                <div class="desc-box" id="panel-issue-desc">No description provided.</div>
+
+                <hr class="panel-divider">
+                
+                <h4>Workflow Status Actions</h4>
+                <div id="status-transition-buttons" class="transition-actions">
+                    <!-- Dynamic next statuses will render here -->
+                </div>
+
+                <hr class="panel-divider">
+
+                <h4>Comments Thread</h4>
+                <form id="form-add-comment" class="comment-input-box">
+                    <input type="text" id="comment-text" required placeholder="Add a comment... (use @mentions)">
+                    <button type="submit" class="btn btn-primary btn-sm">Post</button>
+                </form>
+                <div id="issue-comments" class="comments-list">
+                    <!-- Comments render here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
